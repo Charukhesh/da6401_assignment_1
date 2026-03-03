@@ -1,0 +1,2 @@
+Fashion[[:space:]]MNIST/* filter=lfs diff=lfs merge=lfs -text
+MNIST/* filter=lfs diff=lfs merge=lfs -text
