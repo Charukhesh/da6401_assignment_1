@@ -1,4 +1,6 @@
 import numpy as np
+import wandb
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 def one_hot_encode(y, num_classes=10):
     """
@@ -33,7 +35,6 @@ def train(model, X_train, y_train, X_val, y_val,
     """ 
     Training loop
     """
-    y_train_oh = one_hot_encode(y_train)
     y_val_oh = one_hot_encode(y_val)
 
     best_f1 = -1
@@ -72,8 +73,13 @@ def train(model, X_train, y_train, X_val, y_val,
 
         # Validation
         val_logits = model.forward(X_val)
-        val_loss = loss_fn.forwad(logits, y_val_oh)
+        val_loss = loss_fn.forward(val_logits, y_val_oh)
         val_acc = compute_accuracy(val_logits, y_val)
+
+        val_preds = np.argmax(val_logits, axis=1)
+        val_precision = precision_score(y_val, val_preds, average="macro")
+        val_recall = recall_score(y_val, val_preds, average="macro")
+        val_f1 = f1_score(y_val, val_preds, average="macro")
 
         print(
             f"Epoch {epoch+1}/{epochs} | "
@@ -89,7 +95,10 @@ def train(model, X_train, y_train, X_val, y_val,
                 "train_loss": train_loss,
                 "train_acc": train_acc,
                 "val_loss": val_loss,
-                "val_acc": val_acc
+                "val_acc": val_acc,
+                "val_precision": val_precision,
+                "val_recall": val_recall,
+                "val_f1": val_f1,
             })
 
     return model

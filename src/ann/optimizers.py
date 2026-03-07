@@ -54,7 +54,7 @@ class NAG:
                     }
 
                 v_prev_W = self.velocities[idx]["vW"]
-                v_prev_B = self.velocities[idx]["vb"]
+                v_prev_B = self.velocities[idx]["vB"]
 
                 self.velocities[idx]["vW"] = (
                     self.beta * v_prev_W + self.lr * layer.grad_W

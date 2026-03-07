@@ -1,29 +1,17 @@
 import argparse
 import json
 import numpy as np
+import wandb
 
-from keras.datasets import mnist, fashion_mnist
 from sklearn.model_selection import train_test_split
 
 from ann.neural_network import NeuralNetwork
-from ann.layers import Dense
+from ann.neural_layer import Dense
 from ann.activations import ReLU, Sigmoid, Tanh
-from ann.loss import CrossEntropyLoss, MeanSquaredError
-from ann.optimisers import SGD, Momentum, NAG, RMSProp
+from ann.objective_functions import CrossEntropyLoss, MeanSquaredError
+from ann.optimizers import SGD, Momentum, NAG, RMSProp
 from ann.training import train
-
-def load_dataset(name):
-    if name == "mnist":
-        (X_train, y_train), (X_test, y_test) = mnist.load_data()
-    elif name == "fashion_mnist":
-        (X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
-    else:
-        raise ValueError("Unsupported dataset")
-    
-    X_train = X_train.reshape(len(X_train), -1) / 255.0
-    X_test = X_test.reshape(len(X_test), -1) / 255.0
-
-    return X_train, y_train, X_test, y_test
+from utils.data_loader import load_dataset
 
 def get_activation(name):
     if name == "relu":
@@ -35,7 +23,7 @@ def get_activation(name):
     else:
         raise ValueError("Unsupported activation")
     
-def get_optimiser(name, lr):
+def get_optimizer(name, lr):
     if name == "sgd":
         return SGD(lr)
     elif name == "momentum":
@@ -45,7 +33,7 @@ def get_optimiser(name, lr):
     elif name == "rmsprop":
         return RMSProp(lr)
     else:
-        raise ValueError("Unsupported optimizer")
+        raise ValueError("Unsupported optimiser")
     
 def get_loss(name):
     if name == "cross_entropy":
@@ -67,6 +55,20 @@ def build_model(input_dim, hidden_sizes, activation, weight_init, weight_decay):
     model.add(Dense(prev_dim, 10, weight_init, weight_decay))
     return model
 
+def log_dataset_samples(X, y):
+    grid = []
+
+    for cls in range(10):
+        idx = np.where(y == cls)[0][:5]
+        row = [X[i].reshape(28,28) for i in idx]
+        grid.append(np.concatenate(row, axis=1))
+
+    grid_image = np.concatenate(grid, axis=0)
+
+    wandb.log({
+        "dataset_samples": wandb.Image(grid_image, caption="5 samples per class")
+    })
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -75,7 +77,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=64)
 
     parser.add_argument("--loss", default="cross_entropy")
-    parser.add_argument("--optimiser", default="sgd")
+    parser.add_argument("--optimizer", default="sgd")
     parser.add_argument("--learning_rate", type=float, default=0.01)
 
     parser.add_argument("--weight_decay", type=float, default=0.0)
@@ -90,8 +92,11 @@ def main():
 
     args = parser.parse_args()
 
-    X_train, y_train, X_test, y_test = load_dataset(args.dataset)
+    wandb_run = wandb.init(project=args.wandb_project, config=vars(args))
+
+    X_train, y_train, _, _ = load_dataset(args.dataset)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1)
+    log_dataset_samples(X_train, y_train)
 
     hidden_sizes = args.hidden_size[: args.num_layers]
 
@@ -104,15 +109,17 @@ def main():
     )
 
     loss_fn = get_loss(args.loss)
-    optimiser = get_optimiser(args.optimiser, args.learning_rate)
+    optimiser = get_optimizer(args.optimizer, args.learning_rate)
 
     model = train(model, X_train, y_train, X_val, y_val,
-                  loss_fn, optimiser, args.epochs, args.batch_size)
+                  loss_fn, optimiser, args.epochs, args.batch_size, wandb_run)
     
     weights = model.get_weights()
-    np.save("best_model.npy", weights)
-    with open("best_config.json", "w") as f:
+    np.save("src/best_model.npy", weights)
+    with open("src/best_config.json", "w") as f:
         json.dump(vars(args), f)
+
+    wandb.finish()
 
 if __name__ == "__main__":
     main()
