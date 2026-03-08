@@ -3,3 +3,5 @@ keras
 tensorflow # Required for keras backend
 scikit-learn
 wandb
+matplotlib
+seaborn

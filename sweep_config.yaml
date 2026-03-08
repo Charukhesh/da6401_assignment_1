@@ -1,0 +1,26 @@
+method: random
+program: src/train.py
+
+metric:
+  name: val_f1
+  goal: maximize
+
+parameters:
+
+  learning_rate:
+    values: [0.0005, 0.001, 0.005]
+
+  batch_size:
+    values: [32, 64]
+
+  optimizer:
+    values: ["momentum", "nag", "rmsprop"]
+
+  activation:
+    values: ["relu", "tanh"]
+
+  hidden_size:
+    values:
+      - [64,64]
+      - [128,128]
+      - [128,128,64]

@@ -5,30 +5,33 @@ class MeanSquaredError:
         self.y_pred = None
         self.y_true = None
 
-    def forward(self, y_pred, y_true):
+    def forward(self, y_true, logits):
         """
-        y_pred: (batch_size, num_classes)
+        logits: (batch_size, num_classes)
         y_true: (batch_size, num_classes)
         """
-        self.y_pred = y_pred
+        self.y_pred = logits
         self.y_true = y_true
 
-        loss = np.mean((y_true - y_pred)**2)
+        loss = np.sum((y_true - logits)**2) / logits.shape[0]
         return loss
     
-    def backward(self):
+    def backward(self, y_true, logits):
         """
         Returns gradient wrt y_pred
         """
-        batch_size = self.y_true.shape[0]
-        return (2 / batch_size) * (self.y_pred - self.y_true)
+        if y_true.ndim == 1:
+            y_true = np.eye(logits.shape[1])[y_true]
+
+        batch_size = y_true.shape[0]
+        return (2 / batch_size) * (logits - y_true)
     
 class CrossEntropyLoss:
     def __init__(self):
         self.probs = None
         self.y_true = None
 
-    def forward(self, logits, y_true):
+    def forward(self, y_true, logits):
         """
         logits: (batch_size, num_classes)
         y_true: one-hot encoded (batch_size, num_classes)
@@ -45,9 +48,18 @@ class CrossEntropyLoss:
 
         return loss
     
-    def backward(self):
+    def backward(self, y_true, logits):
         """
         Gradient wrt logits
         """
-        batch_sze = self.y_true.shape[0]
-        return (self.probs - self.y_true) / batch_sze
+
+        if y_true.ndim == 1:
+            y_true = np.eye(logits.shape[1])[y_true]
+
+        shifted = logits - np.max(logits, axis=1, keepdims=True)
+        exp_vals = np.exp(shifted)
+        probs = exp_vals / np.sum(exp_vals, axis=1, keepdims=True)
+
+        batch_size = y_true.shape[0]
+
+        return (probs - y_true) / batch_size

@@ -2,15 +2,15 @@ import numpy as np
 
 class ReLU:
     def __init__(self):
-        self.Z = None
+        self.A = None
 
     def forward(self, X):
-        self.Z = X
-        return np.maximum(0, X)
+        self.A = np.maximum(0, X)
+        return self.A
 
     def backward(self, dA):
         dZ = dA.copy()
-        dZ[self.Z <= 0] = 0
+        dZ[self.A <= 0] = 0
         return dZ
     
 class Sigmoid:
