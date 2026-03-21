@@ -1,6 +1,6 @@
 # Charukhesh B R -- AE22B028
 
-### [W&B Report Link](https://wandb.ai/charukhesh-indian-institute-of-technology-madras/da6401_assignment_1-src/reports/W-B-Report-AE22B028--VmlldzoxNjEzMzIzNA)
+### [W&B Report Link](https://wandb.ai/charukhesh-indian-institute-of-technology-madras/da6401_assignment_1-src/reports/W-B-Report-AE22B028--VmlldzoxNjEzMzIzNA?accessToken=bk2nqhikwmviin2yj6azsewdho2f31zddncg8oyh172t23ilugwklsl9n4rbomh5)
 
 ### [Github Repo Link](https://github.com/Charukhesh/da6401_assignment_1.git)
 
